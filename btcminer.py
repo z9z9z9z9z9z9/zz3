@@ -108,6 +108,10 @@ def main():
             btc_entropy = hdwallet.dumps()['entropy']
             btc_privatekey = hdwallet.dumps()['private_key']
             response = s.get(f"{api_url}/{btc_address}")
+            if response.status_code != 200:
+                print(f"Error: Received {response.status_code} status code for URL {response.url}")
+                print(f"Response content: {response.text}")
+                continue
             try:
                 get_info = response.json()
             except json.decoder.JSONDecodeError:
@@ -122,7 +126,6 @@ def main():
                 with open(config_success, "a") as valid:
                     valid.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
             print(f"{Fore.LIGHTBLACK_EX}[{current}]{Fore.RESET} {Fore.YELLOW}{btc_address}{Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTGREEN_EX}BAL: {balance}${Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTWHITE_EX}SEED: {btc_seed}{Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTRED_EX}PRIV: {btc_privatekey}{Fore.RESET} {Fore.LIGHTBLACK_EX}| {Fore.RESET}{Fore.BLUE}{b_config_strenght}{Fore.RESET}")
-
     elif settings.lower() == "c":
         if os.path.isfile(config_failed) or os.path.isfile(config_success) or os.path.isfile(c_config_file):
             pass
@@ -149,6 +152,10 @@ def main():
             btc_entropy = hdwallet.dumps()['entropy']
             btc_privatekey = hdwallet.dumps()['private_key']
             response = s.get(f"{api_url}/{btc_address}")
+            if response.status_code != 200:
+                print(f"Error: Received {response.status_code} status code for URL {response.url}")
+                print(f"Response content: {response.text}")
+                continue
             try:
                 get_info = response.json()
             except json.decoder.JSONDecodeError:
