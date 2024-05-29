@@ -30,7 +30,6 @@ with open('config.json') as config_file:
     c_config_file_name = data["settings"]["checker"]["filename"]
     config_failed = data["settings"]["general"]["failed"]
     config_success = data["settings"]["general"]["success"]
-    config_address = data["settings"]["general"]["addresstype"]
     api_urls = data["settings"]["general"]["api"]
 
 def center(var: str, space: int = None):
@@ -111,25 +110,23 @@ ui()
 settings = input(f"{Fore.YELLOW}[?]{Fore.RESET} {Fore.LIGHTWHITE_EX}Make a choice between Checker and Bruteforcer [C] - [B] > {Fore.RESET}")
 
 def main():
+    import os
+    print("Current Working Directory:", os.getcwd())
+    print("Checking if files exist in the directory:")
+    print("failed_seeds.txt exists:", os.path.isfile(config_failed))
+    print("successful_seeds.txt exists:", os.path.isfile(config_success))
+    print("seeds_to_check.txt exists:", os.path.isfile(c_config_file_name))
+
     if settings.lower() == "b":
         if not (os.path.isfile(config_failed) and os.path.isfile(config_success) and os.path.isfile(c_config_file_name)):
             errorfile()
-        print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving failed seeds on >> {Fore.LIGHTYELLOW_EX}{config_failed}{Fore.RESET}")
-        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving successful seeds on >> {Fore.LIGHTYELLOW_EX}{config_success}{Fore.RESET}")
-        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Type of addresses >> {Fore.LIGHTYELLOW_EX}{config_address}{Fore.RESET}")
-        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Language >> {Fore.LIGHTYELLOW_EX}{b_config_language}{Fore.RESET}")
-        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Strength >> {Fore.LIGHTYELLOW_EX}{b_config_strenght}{Fore.RESET}")
-        sleep(2)
-        print("\n")
-        STRENGTH = b_config_strenght
-        LANGUAGE = b_config_language
-        PASSPHRASE = None if b_config_passphere == "None" else b_config_passphere
-        s = requests.Session()
+        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Starting bruteforcer...{Fore.RESET}")
         while True:
-            now_time = datetime.now()
-            current = now_time.strftime("%H:%M:%S")
-            MNEMONIC = generate_mnemonic(language=LANGUAGE, strength=STRENGTH)
             hdwallet = HDWallet(symbol=BTC_SYMBOL, use_default_path=False)
+            MNEMONIC: str = generate_mnemonic(language=b_config_language, strength=b_config_strenght)
+            LANGUAGE: str = b_config_language
+            PASSPHRASE: Optional[str] = b_config_passphere
+
             hdwallet.from_mnemonic(mnemonic=MNEMONIC, language=LANGUAGE, passphrase=PASSPHRASE)
             btc_address = hdwallet.p2pkh_address()
             hdwallet.from_mnemonic(mnemonic=MNEMONIC, language=LANGUAGE, passphrase=PASSPHRASE)
