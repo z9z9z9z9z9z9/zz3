@@ -11,17 +11,15 @@
             "language": "english",
             "passphere": "None"
         },
-        "general": { 
+        "general": {
             "failed": "failed.txt",
             "success": "success.txt",
             "ADDRESS_OPTIONS": "p2pkh, p2sh, p2wpkh, p2wpkh_in_p2sh, p2wsh, p2wsh_in_p2sh",
-            "addresstype" : "p2pkh",
-                "api": {
-                    "api_url": "https://chain.api.btc.com/v3/address",
-                    "api_get_data": "data",
-                    "api_get_balance": "balance",
-                    "api_get_recieved": "received"
-                }
+            "addresstype": "p2pkh",
+            "api": {
+                "api_url": "https://blockchain.info/rawaddr",
+                "api_key": ""
             }
         }
+    }
 }
