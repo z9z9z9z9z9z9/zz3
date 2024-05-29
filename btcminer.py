@@ -1,5 +1,5 @@
 from hdwallet import HDWallet
-from hdwallet.symbols import BTC as SYMBOL
+from hdwallet.symbols import BTC as BTC_SYMBOL, LTC as LTC_SYMBOL, ETH as ETH_SYMBOL, DOGE as DOGE_SYMBOL
 from hdwallet.utils import generate_mnemonic
 from typing import Optional
 from colorama import Fore
@@ -69,6 +69,40 @@ def errorfile():
 ui()
 settings = input(f"{Fore.YELLOW}[?]{Fore.RESET} {Fore.LIGHTWHITE_EX}Make a choice between Checker and Bruteforcer [C] - [B] > {Fore.RESET}")
 
+def check_balance(symbol, address, api_url):
+    response = requests.get(f"{api_url}/{address}")
+    if response.status_code == 404:
+        print(f"Error: Received 404 status code for URL {response.url}")
+        print("The API endpoint might be incorrect or the address may not exist.")
+        return 0
+    elif response.status_code != 200:
+        print(f"Error: Received {response.status_code} status code for URL {response.url}")
+        print(f"Response content: {response.text}")
+        return 0
+    try:
+        get_info = response.json()
+    except json.decoder.JSONDecodeError:
+        print(f"Error parsing JSON response: {response.text}")
+        return 0
+    
+    if symbol == "BTC":
+        balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
+        all_time_balance = get_info.get('chain_stats', {}).get('spent_txo_sum', 0)
+    elif symbol == "LTC":
+        balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
+        all_time_balance = get_info.get('chain_stats', {}).get('spent_txo_sum', 0)
+    elif symbol == "DOGE":
+        balance = get_info.get('balance', 0)
+        all_time_balance = get_info.get('received', 0)
+    elif symbol == "ETH":
+        balance = get_info.get('balance', 0) / 1e18  # Convert wei to ETH
+        all_time_balance = get_info.get('total_received', 0) / 1e18  # Convert wei to ETH
+    else:
+        balance = 0
+        all_time_balance = 0
+
+    return balance, all_time_balance
+
 def main():
     if settings.lower() == "b":
         if not (os.path.isfile(config_failed) and os.path.isfile(config_success) and os.path.isfile(c_config_file_name)):
@@ -88,29 +122,14 @@ def main():
             now_time = datetime.now()
             current = now_time.strftime("%H:%M:%S")
             MNEMONIC = generate_mnemonic(language=LANGUAGE, strength=STRENGTH)
-            hdwallet = HDWallet(symbol=SYMBOL, use_default_path=False)
+            hdwallet = HDWallet(symbol=BTC_SYMBOL, use_default_path=False)
             hdwallet.from_mnemonic(mnemonic=MNEMONIC, language=LANGUAGE, passphrase=PASSPHRASE)
             btc_address = hdwallet.p2pkh_address()
             btc_wif = hdwallet.dumps()['wif']
             btc_seed = hdwallet.dumps()['mnemonic']
             btc_entropy = hdwallet.dumps()['entropy']
             btc_privatekey = hdwallet.dumps()['private_key']
-            response = s.get(f"{api_url}/{btc_address}")
-            if response.status_code == 404:
-                print(f"Error: Received 404 status code for URL {response.url}")
-                print("The API endpoint might be incorrect or the address may not exist.")
-                continue
-            elif response.status_code != 200:
-                print(f"Error: Received {response.status_code} status code for URL {response.url}")
-                print(f"Response content: {response.text}")
-                continue
-            try:
-                get_info = response.json()
-            except json.decoder.JSONDecodeError:
-                print(f"Error parsing JSON response: {response.text}")
-                continue
-            balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
-            all_time_balance = get_info.get('chain_stats', {}).get('spent_txo_sum', 0)
+            balance, all_time_balance = check_balance("BTC", btc_address, api_url)
             if str(balance) == "0" or str(all_time_balance) == "0":
                 with open(config_failed, "a") as fail:
                     fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
@@ -133,29 +152,14 @@ def main():
             now_time = datetime.now()
             current = now_time.strftime("%H:%M:%S")
             mnemonic = line.split("|")[0].strip()
-            hdwallet = HDWallet(symbol=SYMBOL, use_default_path=False)
+            hdwallet = HDWallet(symbol=BTC_SYMBOL, use_default_path=False)
             hdwallet.from_mnemonic(mnemonic=mnemonic, passphrase=None)
             btc_address = hdwallet.p2pkh_address()
             btc_wif = hdwallet.dumps()['wif']
             btc_seed = hdwallet.dumps()['mnemonic']
             btc_entropy = hdwallet.dumps()['entropy']
             btc_privatekey = hdwallet.dumps()['private_key']
-            response = s.get(f"{api_url}/{btc_address}")
-            if response.status_code == 404:
-                print(f"Error: Received 404 status code for URL {response.url}")
-                print("The API endpoint might be incorrect or the address may not exist.")
-                continue
-            elif response.status_code != 200:
-                print(f"Error: Received {response.status_code} status code for URL {response.url}")
-                print(f"Response content: {response.text}")
-                continue
-            try:
-                get_info = response.json()
-            except json.decoder.JSONDecodeError:
-                print(f"Error parsing JSON response: {response.text}")
-                continue
-            balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
-            all_time_balance = get_info.get('chain_stats', {}).get('spent_txo_sum', 0)
+            balance, all_time_balance = check_balance("BTC", btc_address, api_url)
             if str(balance) == "0" or str(all_time_balance) == "0":
                 with open(config_failed, "a") as fail:
                     fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
