@@ -1,14 +1,12 @@
 from hdwallet import HDWallet
-from hdwallet.symbols import BTC as BTC_SYMBOL
-from hdwallet.symbols import LTC as LTC_SYMBOL
-from hdwallet.symbols import ETH as ETH_SYMBOL
-from hdwallet.symbols import DOGE as DOGE_SYMBOL
+from hdwallet.symbols import BTC as BTC_SYMBOL, LTC as LTC_SYMBOL, ETH as ETH_SYMBOL, DOGE as DOGE_SYMBOL
 from hdwallet.utils import generate_mnemonic
 from typing import Optional
 from colorama import Fore
 import json, requests, os
 from datetime import datetime
 from time import sleep
+import random
 
 def clear():
     if os.name == 'nt':
@@ -30,7 +28,8 @@ with open('config.json') as config_file:
     c_config_file_name = data["settings"]["checker"]["filename"]
     config_failed = data["settings"]["general"]["failed"]
     config_success = data["settings"]["general"]["success"]
-    api_urls = data["settings"]["general"]["api"]
+    config_address = data["settings"]["general"]["addresstype"]
+    api_url = data["settings"]["general"]["api"]["api_url"]
 
 def center(var: str, space: int = None):
     if not space:
@@ -40,15 +39,14 @@ def center(var: str, space: int = None):
 def ui():
     clear()
     font = """
-                ▄▄▄▄   ▄▄▄█████▓ ▄████▄    █████▒▒█████   ██▀███   ▄████▄  ▓█████  ██▀███  
-                ▓█████▄ ▓  ██▒ ▓▒▒██▀ ▀█  ▓██   ▒▒██▒  ██▒▓██ ▒ ██▒▒██▀ ▀█  ▓█   ▀ ▓██ ▒ ██▒
-                ▒██▒ ▄██▒ ▓██░ ▒░▒▓█    ▄ ▒████ ░▒██░  ██▒▓██ ░▄█ ▒▒▓█    ▄ ▒███   ▓██ ░▄█ ▒
-                ▒██░█▀  ░ ▓██▓ ░ ▒▓▓▄ ▄██▒░▓█▒  ░▒██   ██░▒██▀▀█▄  ▒▓▓▄ ▄██▒▒▓█  ▄ ▒██▀▀█▄  
-                ░▓█  ▀█▓  ▒██▒ ░ ▒ ▓███▀ ░░▒█░   ░ ████▓▒░░██▓ ▒██▒▒ ▓███▀ ░░▒████▒░██▓ ▒██▒
-                ░▒▓███▀▒  ▒ ░░   ░ ░▒ ▒  ░ ▒ ░   ░ ▒░▒░▒░ ░ ▒▓ ░▒▓░░ ░▒ ▒  ░░░ ▒░ ░░ ▒▓ ░▒▓░
-                ▒░▒   ░     ░      ░  ▒    ░       ░ ▒ ▒░   ░▒ ░ ▒░  ░  ▒    ░ ░  ░  ░▒ ░ ▒░
-                ░    ░   ░      ░         ░ ░   ░ ░ ░ ▒    ░░   ░ ░           ░     ░░   ░ 
-                ░               ░ ░                 ░ ░     ░     ░ ░         ░  ░   ░     
+⬛⬛⬛⬛⬜⬜⬛
+⬜⬜⬜⬛⬜⬜⬛
+⬜⬜⬜⬛⬜⬜⬛
+⬛⬛⬛⬛⬛⬛⬛
+⬛⬜⬜⬛⬜⬜⬜
+⬛⬜⬜⬛⬜⬜⬜
+⬛⬜⬜⬛⬛⬛⬛
+
                     ░          ░                                 ░                        """
     faded = ''
     red = 0
@@ -59,7 +57,7 @@ def ui():
             if red > 110:
                 red = 255
     print(center(faded))
-    print(center(f'{Fore.LIGHTYELLOW_EX}\ngithub.com/LizardX2 Version 1.0 | Telegram: @LizardX2\n{Fore.RESET}'))
+    print(center(f'{Fore.LIGHTYELLOW_EX}\nBruteforce bitcoins for nuclear WMD\n{Fore.RESET}'))
 
 def errorfile():
     clear()
@@ -67,33 +65,31 @@ def errorfile():
     input(f"{Fore.LIGHTRED_EX}[!] Press enter to exit... {Fore.RESET}")
     exit()
 
-def check_balance(symbol, address, api_urls):
-    api_url = api_urls.get(symbol.lower())
-    if not api_url:
-        print(f"API URL for {symbol} is not configured.")
-        return 0, 0
+ui()
+settings = input(f"{Fore.YELLOW}[?]{Fore.RESET} {Fore.LIGHTWHITE_EX}Make a choice between Checker and Bruteforcer [C] - [B] > {Fore.RESET}")
 
+def check_balance(symbol, address, api_url):
     response = requests.get(f"{api_url}/{address}")
     if response.status_code == 404:
         print(f"Error: Received 404 status code for URL {response.url}")
         print("The API endpoint might be incorrect or the address may not exist.")
-        return 0, 0
+        return 0
     elif response.status_code != 200:
         print(f"Error: Received {response.status_code} status code for URL {response.url}")
         print(f"Response content: {response.text}")
-        return 0, 0
+        return 0
     try:
         get_info = response.json()
     except json.decoder.JSONDecodeError:
         print(f"Error parsing JSON response: {response.text}")
-        return 0, 0
-
+        return 0
+    
     if symbol == "BTC":
         balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
         all_time_balance = get_info.get('chain_stats', {}).get('spent_txo_sum', 0)
     elif symbol == "LTC":
-        balance = get_info.get('balance', 0)
-        all_time_balance = get_info.get('total_received', 0)
+        balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
+        all_time_balance = get_info.get('chain_stats', {}).get('spent_txo_sum', 0)
     elif symbol == "DOGE":
         balance = get_info.get('balance', 0)
         all_time_balance = get_info.get('received', 0)
@@ -106,109 +102,69 @@ def check_balance(symbol, address, api_urls):
 
     return balance, all_time_balance
 
-ui()
-settings = input(f"{Fore.YELLOW}[?]{Fore.RESET} {Fore.LIGHTWHITE_EX}Make a choice between Checker and Bruteforcer [C] - [B] > {Fore.RESET}")
-
 def main():
-    import os
-    print("Current Working Directory:", os.getcwd())
-    print("Checking if files exist in the directory:")
-    print("failed_seeds.txt exists:", os.path.isfile(config_failed))
-    print("successful_seeds.txt exists:", os.path.isfile(config_success))
-    print("seeds_to_check.txt exists:", os.path.isfile(c_config_file_name))
-
     if settings.lower() == "b":
         if not (os.path.isfile(config_failed) and os.path.isfile(config_success) and os.path.isfile(c_config_file_name)):
             errorfile()
-        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Starting bruteforcer...{Fore.RESET}")
+        print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving failed seeds on >> {Fore.LIGHTYELLOW_EX}{config_failed}{Fore.RESET}")
+        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving successful seeds on >> {Fore.LIGHTYELLOW_EX}{config_success}{Fore.RESET}")
+        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Type of addresses >> {Fore.LIGHTYELLOW_EX}{config_address}{Fore.RESET}")
+        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Language >> {Fore.LIGHTYELLOW_EX}{b_config_language}{Fore.RESET}")
+        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Strength >> {Fore.LIGHTYELLOW_EX}{b_config_strenght}{Fore.RESET}")
+        sleep(2)
+        print("\n")
+        STRENGTH = b_config_strenght
+        LANGUAGE = b_config_language
+        PASSPHRASE = None if b_config_passphere == "None" else b_config_passphere
+        s = requests.Session()
         while True:
+            now_time = datetime.now()
+            current = now_time.strftime("%H:%M:%S")
+            MNEMONIC = generate_mnemonic(language=LANGUAGE, strength=STRENGTH)
             hdwallet = HDWallet(symbol=BTC_SYMBOL, use_default_path=False)
-            MNEMONIC: str = generate_mnemonic(language=b_config_language, strength=b_config_strenght)
-            LANGUAGE: str = b_config_language
-            PASSPHRASE: Optional[str] = b_config_passphere
-
             hdwallet.from_mnemonic(mnemonic=MNEMONIC, language=LANGUAGE, passphrase=PASSPHRASE)
             btc_address = hdwallet.p2pkh_address()
-            hdwallet.from_mnemonic(mnemonic=MNEMONIC, language=LANGUAGE, passphrase=PASSPHRASE)
-            hdwallet.symbol = LTC_SYMBOL
-            ltc_address = hdwallet.p2pkh_address()
-            hdwallet.from_mnemonic(mnemonic=MNEMONIC, language=LANGUAGE, passphrase=PASSPHRASE)
-            hdwallet.symbol = DOGE_SYMBOL
-            doge_address = hdwallet.p2pkh_address()
-            hdwallet.from_mnemonic(mnemonic=MNEMONIC, language=LANGUAGE, passphrase=PASSPHRASE)
-            hdwallet.symbol = ETH_SYMBOL
-            eth_address = hdwallet.p2pkh_address()
-
-            btc_balance, btc_all_time_balance = check_balance("BTC", btc_address, api_urls)
-            ltc_balance, ltc_all_time_balance = check_balance("LTC", ltc_address, api_urls)
-            doge_balance, doge_all_time_balance = check_balance("DOGE", doge_address, api_urls)
-            eth_balance, eth_all_time_balance = check_balance("ETH", eth_address, api_urls)
-
-            total_balance = btc_balance + ltc_balance + doge_balance + eth_balance
-            total_all_time_balance = btc_all_time_balance + ltc_all_time_balance + doge_all_time_balance + eth_all_time_balance
-
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Generated Mnemonic: {Fore.LIGHTYELLOW_EX}{MNEMONIC}{Fore.RESET}")
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}BTC Address: {Fore.LIGHTYELLOW_EX}{btc_address}{Fore.RESET} | Balance: {btc_balance}")
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}LTC Address: {Fore.LIGHTYELLOW_EX}{ltc_address}{Fore.RESET} | Balance: {ltc_balance}")
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}DOGE Address: {Fore.LIGHTYELLOW_EX}{doge_address}{Fore.RESET} | Balance: {doge_balance}")
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}ETH Address: {Fore.LIGHTYELLOW_EX}{eth_address}{Fore.RESET} | Balance: {eth_balance}")
-
-            if total_balance > 0:
-                with open(config_success, "a") as success_file:
-                    success_file.write(f"{MNEMONIC} | BTC: {btc_balance}, LTC: {ltc_balance}, DOGE: {doge_balance}, ETH: {eth_balance}\n")
-                print(f"{Fore.GREEN}[+]{Fore.RESET} {Fore.LIGHTWHITE_EX}Successful Mnemonic: {Fore.LIGHTYELLOW_EX}{MNEMONIC}{Fore.RESET}")
+            btc_wif = hdwallet.dumps()['wif']
+            btc_seed = hdwallet.dumps()['mnemonic']
+            btc_entropy = hdwallet.dumps()['entropy']
+            btc_privatekey = hdwallet.dumps()['private_key']
+            balance, all_time_balance = check_balance("BTC", btc_address, api_url)
+            if str(balance) == "0" or str(all_time_balance) == "0":
+                with open(config_failed, "a") as fail:
+                    fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
             else:
-                with open(config_failed, "a") as failed_file:
-                    failed_file.write(f"{MNEMONIC}\n")
-
-            sleep(1)
-
+                with open(config_success, "a") as valid:
+                    valid.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
+            print(f"{Fore.LIGHTBLACK_EX}[{current}]{Fore.RESET} {Fore.YELLOW}{btc_address}{Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTGREEN_EX}BAL: {balance}${Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTWHITE_EX}SEED: {btc_seed}{Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTRED_EX}PRIV: {btc_privatekey}{Fore.RESET} {Fore.LIGHTBLACK_EX}| {Fore.RESET}{Fore.BLUE}{b_config_strenght}{Fore.RESET}")
     elif settings.lower() == "c":
         if not (os.path.isfile(config_failed) and os.path.isfile(config_success) and os.path.isfile(c_config_file_name)):
             errorfile()
-        print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Checking seeds from file >> {Fore.LIGHTYELLOW_EX}{c_config_file_name}{Fore.RESET}")
+        print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving failed seeds on >> {Fore.LIGHTYELLOW_EX}{config_failed}{Fore.RESET}")
+        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving successful seeds on >> {Fore.LIGHTYELLOW_EX}{config_success}{Fore.RESET}")
+        print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Type of addresses >> {Fore.LIGHTYELLOW_EX}{config_address}{Fore.RESET}")
         sleep(2)
-        with open(c_config_file_name, "r") as seeds_file:
-            seeds = seeds_file.readlines()
-        
-        for seed in seeds:
-            seed = seed.strip()
+        print("\n")
+        with open(c_config_file_name, "r") as z:
+            c_config_file = [x.strip() for x in z.readlines()]
+        s = requests.Session()
+        for line in c_config_file:
+            now_time = datetime.now()
+            current = now_time.strftime("%H:%M:%S")
+            mnemonic = line.split("|")[0].strip()
             hdwallet = HDWallet(symbol=BTC_SYMBOL, use_default_path=False)
-            hdwallet.from_mnemonic(mnemonic=seed, language=LANGUAGE, passphrase=PASSPHRASE)
+            hdwallet.from_mnemonic(mnemonic=mnemonic, passphrase=None)
             btc_address = hdwallet.p2pkh_address()
-            hdwallet.from_mnemonic(mnemonic=seed, language=LANGUAGE, passphrase=PASSPHRASE)
-            hdwallet.symbol = LTC_SYMBOL
-            ltc_address = hdwallet.p2pkh_address()
-            hdwallet.from_mnemonic(mnemonic=seed, language=LANGUAGE, passphrase=PASSPHRASE)
-            hdwallet.symbol = DOGE_SYMBOL
-            doge_address = hdwallet.p2pkh_address()
-            hdwallet.from_mnemonic(mnemonic=seed, language=LANGUAGE, passphrase=PASSPHRASE)
-            hdwallet.symbol = ETH_SYMBOL
-            eth_address = hdwallet.p2pkh_address()
-
-            btc_balance, btc_all_time_balance = check_balance("BTC", btc_address, api_urls)
-            ltc_balance, ltc_all_time_balance = check_balance("LTC", ltc_address, api_urls)
-            doge_balance, doge_all_time_balance = check_balance("DOGE", doge_address, api_urls)
-            eth_balance, eth_all_time_balance = check_balance("ETH", eth_address, api_urls)
-
-            total_balance = btc_balance + ltc_balance + doge_balance + eth_balance
-            total_all_time_balance = btc_all_time_balance + ltc_all_time_balance + doge_all_time_balance + eth_all_time_balance
-
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Checking Mnemonic: {Fore.LIGHTYELLOW_EX}{seed}{Fore.RESET}")
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}BTC Address: {Fore.LIGHTYELLOW_EX}{btc_address}{Fore.RESET} | Balance: {btc_balance}")
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}LTC Address: {Fore.LIGHTYELLOW_EX}{ltc_address}{Fore.RESET} | Balance: {ltc_balance}")
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}DOGE Address: {Fore.LIGHTYELLOW_EX}{doge_address}{Fore.RESET} | Balance: {doge_balance}")
-            print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}ETH Address: {Fore.LIGHTYELLOW_EX}{eth_address}{Fore.RESET} | Balance: {eth_balance}")
-
-            if total_balance > 0:
-                with open(config_success, "a") as success_file:
-                    success_file.write(f"{seed} | BTC: {btc_balance}, LTC: {ltc_balance}, DOGE: {doge_balance}, ETH: {eth_balance}\n")
-                print(f"{Fore.GREEN}[+]{Fore.RESET} {Fore.LIGHTWHITE_EX}Successful Mnemonic: {Fore.LIGHTYELLOW_EX}{seed}{Fore.RESET}")
+            btc_wif = hdwallet.dumps()['wif']
+            btc_seed = hdwallet.dumps()['mnemonic']
+            btc_entropy = hdwallet.dumps()['entropy']
+            btc_privatekey = hdwallet.dumps()['private_key']
+            balance, all_time_balance = check_balance("BTC", btc_address, api_url)
+            if str(balance) == "0" or str(all_time_balance) == "0":
+                with open(config_failed, "a") as fail:
+                    fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
             else:
-                with open(config_failed, "a") as failed_file:
-                    failed_file.write(f"{seed}\n")
+                with open(config_success, "a") as valid:
+                    valid.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
+            print(f"{Fore.LIGHTBLACK_EX}[{current}]{Fore.RESET} {Fore.YELLOW}{btc_address}{Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTGREEN_EX}BAL: {balance}${Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTWHITE_EX}SEED: {btc_seed}{Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTRED_EX}PRIV: {btc_privatekey}{Fore.RESET} {Fore.LIGHTBLACK_EX}| {Fore.RESET}{Fore.BLUE}{b_config_strenght}{Fore.RESET}")
 
-            sleep(1)
-
-if __name__ == "__main__":
-    main()
+main()
