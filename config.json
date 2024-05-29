@@ -17,7 +17,7 @@
             "ADDRESS_OPTIONS": "p2pkh, p2sh, p2wpkh, p2wpkh_in_p2sh, p2wsh, p2wsh_in_p2sh",
             "addresstype": "p2pkh",
             "api": {
-                "api_url": "https://blockchain.info/rawaddr",
+                "api_url": "https://api.blockcypher.com/v1/btc/main/addrs",
                 "api_key": ""
             }
         }
