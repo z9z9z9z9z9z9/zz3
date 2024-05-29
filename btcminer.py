@@ -24,7 +24,7 @@ with open('config.json') as config_file:
     b_config_strenght = data["settings"]["bruteforcer"]["strenght"]
     b_config_language = data["settings"]["bruteforcer"]["language"]
     b_config_passphere = data["settings"]["bruteforcer"]["passphere"]
-    c_config_file = data["settings"]["checker"]["filename"]
+    c_config_file_name = data["settings"]["checker"]["filename"]
     config_failed = data["settings"]["general"]["failed"]
     config_success = data["settings"]["general"]["success"]
     config_address = data["settings"]["general"]["addresstype"]
@@ -64,7 +64,7 @@ def ui():
 
 def errorfile():
     clear()
-    print(f"{Fore.RED}[!] FATAL ERROR! A text file in the directory is missing, please make sure the files: {config_failed} | {config_success} | {c_config_file} are there, or are in the same path! {Fore.RESET}")
+    print(f"{Fore.RED}[!] FATAL ERROR! A text file in the directory is missing, please make sure the files: {config_failed} | {config_success} | {c_config_file_name} are there, or are in the same path! {Fore.RESET}")
     input(f"{Fore.LIGHTRED_EX}[!] Press enter to exit... {Fore.RESET}")
     exit()
 
@@ -73,7 +73,7 @@ settings = input(f"{Fore.YELLOW}[?]{Fore.RESET} {Fore.LIGHTWHITE_EX}Make a choic
 
 def main():
     if settings.lower() == "b":
-        if not (os.path.isfile(config_failed) and os.path.isfile(config_success) and os.path.isfile(c_config_file)):
+        if not (os.path.isfile(config_failed) and os.path.isfile(config_success) and os.path.isfile(c_config_file_name)):
             errorfile()
         print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving failed seeds on >> {Fore.LIGHTYELLOW_EX}{config_failed}{Fore.RESET}")
         print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving successful seeds on >> {Fore.LIGHTYELLOW_EX}{config_success}{Fore.RESET}")
@@ -121,14 +121,14 @@ def main():
                     valid.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
             print(f"{Fore.LIGHTBLACK_EX}[{current}]{Fore.RESET} {Fore.YELLOW}{btc_address}{Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTGREEN_EX}BAL: {balance}${Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTWHITE_EX}SEED: {btc_seed}{Fore.RESET} {Fore.LIGHTBLACK_EX}|{Fore.RESET} {Fore.LIGHTRED_EX}PRIV: {btc_privatekey}{Fore.RESET} {Fore.LIGHTBLACK_EX}| {Fore.RESET}{Fore.BLUE}{b_config_strenght}{Fore.RESET}")
     elif settings.lower() == "c":
-        if not (os.path.isfile(config_failed) and os.path.isfile(config_success) and os.path.isfile(c_config_file)):
+        if not (os.path.isfile(config_failed) and os.path.isfile(config_success) and os.path.isfile(c_config_file_name)):
             errorfile()
         print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving failed seeds on >> {Fore.LIGHTYELLOW_EX}{config_failed}{Fore.RESET}")
         print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Saving successful seeds on >> {Fore.LIGHTYELLOW_EX}{config_success}{Fore.RESET}")
         print(f"{Fore.YELLOW}[!]{Fore.RESET} {Fore.LIGHTWHITE_EX}Type of addresses >> {Fore.LIGHTYELLOW_EX}{config_address}{Fore.RESET}")
         sleep(2)
         print("\n")
-        with open(c_config_file, "r") as z:
+        with open(c_config_file_name, "r") as z:
             c_config_file = [x.strip() for x in z.readlines()]
         s = requests.Session()
         for line in c_config_file:
