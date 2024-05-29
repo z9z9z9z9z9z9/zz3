@@ -6,6 +6,7 @@ from colorama import Fore
 import json, requests, os
 from datetime import datetime
 from time import sleep
+import random
 
 def clear():
     if os.name == 'nt':
@@ -29,7 +30,6 @@ with open('config.json') as config_file:
     config_success = data["settings"]["general"]["success"]
     config_address = data["settings"]["general"]["addresstype"]
     api_url = data["settings"]["general"]["api"]["api_url"]
-    api_key = data["settings"]["general"]["api"]["api_key"]
 
 def center(var: str, space: int = None):
     if not space:
@@ -109,8 +109,8 @@ def main():
             except json.decoder.JSONDecodeError:
                 print(f"Error parsing JSON response: {response.text}")
                 continue
-            balance = get_info.get('balance', 0)
-            all_time_balance = get_info.get('total_received', 0)
+            balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
+            all_time_balance = get_info.get('chain_stats', {}).get('spent_txo_sum', 0)
             if str(balance) == "0" or str(all_time_balance) == "0":
                 with open(config_failed, "a") as fail:
                     fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
@@ -154,8 +154,8 @@ def main():
             except json.decoder.JSONDecodeError:
                 print(f"Error parsing JSON response: {response.text}")
                 continue
-            balance = get_info.get('balance', 0)
-            all_time_balance = get_info.get('total_received', 0)
+            balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
+            all_time_balance = get_info.get('chain_stats', {}).get('spent_txo_sum', 0)
             if str(balance) == "0" or str(all_time_balance) == "0":
                 with open(config_failed, "a") as fail:
                     fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
