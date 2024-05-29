@@ -29,7 +29,7 @@ with open('config.json') as config_file:
     config_failed = data["settings"]["general"]["failed"]
     config_success = data["settings"]["general"]["success"]
     config_address = data["settings"]["general"]["addresstype"]
-    api_url = data["settings"]["general"]["api"]["api_url"]
+    api_urls = data["settings"]["general"]["api"]
 
 def center(var: str, space: int = None):
     if not space:
@@ -68,21 +68,32 @@ def errorfile():
 ui()
 settings = input(f"{Fore.YELLOW}[?]{Fore.RESET} {Fore.LIGHTWHITE_EX}Make a choice between Checker and Bruteforcer [C] - [B] > {Fore.RESET}")
 
-def check_balance(symbol, address, api_url):
+def check_balance(symbol, address, api_urls):
+    if symbol == "BTC":
+        api_url = api_urls['btc']
+    elif symbol == "LTC":
+        api_url = api_urls['ltc']
+    elif symbol == "DOGE":
+        api_url = api_urls['doge']
+    elif symbol == "ETH":
+        api_url = api_urls['eth']
+    else:
+        return 0, 0
+    
     response = requests.get(f"{api_url}/{address}")
     if response.status_code == 404:
         print(f"Error: Received 404 status code for URL {response.url}")
         print("The API endpoint might be incorrect or the address may not exist.")
-        return 0
+        return 0, 0
     elif response.status_code != 200:
         print(f"Error: Received {response.status_code} status code for URL {response.url}")
         print(f"Response content: {response.text}")
-        return 0
+        return 0, 0
     try:
         get_info = response.json()
     except json.decoder.JSONDecodeError:
         print(f"Error parsing JSON response: {response.text}")
-        return 0
+        return 0, 0
     
     if symbol == "BTC":
         balance = get_info.get('chain_stats', {}).get('funded_txo_sum', 0)
@@ -128,7 +139,7 @@ def main():
             btc_seed = hdwallet.dumps()['mnemonic']
             btc_entropy = hdwallet.dumps()['entropy']
             btc_privatekey = hdwallet.dumps()['private_key']
-            balance, all_time_balance = check_balance("BTC", btc_address, api_url)
+            balance, all_time_balance = check_balance("BTC", btc_address, api_urls)
             if str(balance) == "0" or str(all_time_balance) == "0":
                 with open(config_failed, "a") as fail:
                     fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
@@ -158,7 +169,7 @@ def main():
             btc_seed = hdwallet.dumps()['mnemonic']
             btc_entropy = hdwallet.dumps()['entropy']
             btc_privatekey = hdwallet.dumps()['private_key']
-            balance, all_time_balance = check_balance("BTC", btc_address, api_url)
+            balance, all_time_balance = check_balance("BTC", btc_address, api_urls)
             if str(balance) == "0" or str(all_time_balance) == "0":
                 with open(config_failed, "a") as fail:
                     fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
