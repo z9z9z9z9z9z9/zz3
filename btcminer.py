@@ -95,7 +95,7 @@ def main():
             btc_seed = hdwallet.dumps()['mnemonic']
             btc_entropy = hdwallet.dumps()['entropy']
             btc_privatekey = hdwallet.dumps()['private_key']
-            response = s.get(f"{api_url}/{btc_address}?key={api_key}")
+            response = s.get(f"{api_url}/{btc_address}")
             if response.status_code == 404:
                 print(f"Error: Received 404 status code for URL {response.url}")
                 print("The API endpoint might be incorrect or the address may not exist.")
@@ -109,8 +109,8 @@ def main():
             except json.decoder.JSONDecodeError:
                 print(f"Error parsing JSON response: {response.text}")
                 continue
-            balance = get_info['final_balance']
-            all_time_balance = get_info['total_received']
+            balance = get_info.get('balance', 0)
+            all_time_balance = get_info.get('total_received', 0)
             if str(balance) == "0" or str(all_time_balance) == "0":
                 with open(config_failed, "a") as fail:
                     fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
@@ -140,7 +140,7 @@ def main():
             btc_seed = hdwallet.dumps()['mnemonic']
             btc_entropy = hdwallet.dumps()['entropy']
             btc_privatekey = hdwallet.dumps()['private_key']
-            response = s.get(f"{api_url}/{btc_address}?key={api_key}")
+            response = s.get(f"{api_url}/{btc_address}")
             if response.status_code == 404:
                 print(f"Error: Received 404 status code for URL {response.url}")
                 print("The API endpoint might be incorrect or the address may not exist.")
@@ -154,8 +154,8 @@ def main():
             except json.decoder.JSONDecodeError:
                 print(f"Error parsing JSON response: {response.text}")
                 continue
-            balance = get_info['final_balance']
-            all_time_balance = get_info['total_received']
+            balance = get_info.get('balance', 0)
+            all_time_balance = get_info.get('total_received', 0)
             if str(balance) == "0" or str(all_time_balance) == "0":
                 with open(config_failed, "a") as fail:
                     fail.write(f"{btc_address} | {balance}$ | {all_time_balance}$ | {btc_seed} | {btc_privatekey} | {btc_entropy} | {btc_wif} \n")
